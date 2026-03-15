@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: btg-cards-service
+
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/btg_cards_db
+    username: root
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  data:
+    mongodb:
+      uri: mongodb://root:password@localhost:27017/btg_cards_mongo?authSource=admin
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+
+  elasticsearch:
+    uris: http://localhost:9200
