@@ -1,21 +1,10 @@
-# 💳 BTG Cards Service - Desafio Técnico DOMVS iT
-
-![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-brightgreen?style=for-the-badge&logo=spring)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=for-the-badge&logo=postgresql)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message_Broker-ff6600?style=for-the-badge&logo=rabbitmq)
-![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?style=for-the-badge&logo=docker)
-![JUnit5](https://img.shields.io/badge/JUnit5-Testing-25A162?style=for-the-badge&logo=junit5)
-
+💳 BTG Cards Service - Desafio Técnico DOMVS iT
 API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedor Java. O microsserviço é responsável por orquestrar o fluxo de solicitação de cartões de crédito, validando regras de negócio complexas, persistindo dados de forma segura e emitindo eventos assíncronos para a criação efetiva das contas.
 
----
-
-## 🏗️ Arquitetura e Fluxo de Dados
-
+🏗️ Arquitetura e Fluxo de Dados
 Abaixo está o diagrama de sequência do fluxo principal da aplicação, evidenciando o isolamento de responsabilidades e a comunicação assíncrona:
 
-```mermaid
+Snippet de código
 sequenceDiagram
     actor Cliente
     participant API as PropostaController
@@ -104,24 +93,4 @@ JSON
   "tempoContaCorrenteAnos": 3,
   "ofertaSelecionada": "OFERTA_C",
   "beneficiosSelecionados": ["SALA_VIP", "SEGURO_VIAGEM"]
-}
-Exemplo de Response (201 Created):
-
-JSON
-{
-  "id": "84e8ef21-e52a-4873-b776-55e3c63e4c90",
-  "ofertaSelecionada": "OFERTA_C",
-  "beneficiosAtivos": ["SALA_VIP", "SEGURO_VIAGEM"],
-  "status": "APROVADA"
-}
-Exemplo de Response (400 Bad Request - Erro de Validação):
-
-JSON
-{
-  "timestamp": "2026-03-16T02:17:58.413",
-  "status": 400,
-  "erro": "Dados inválidos na requisição",
-  "detalhes": [
-    "cpf: Formato de CPF inválido."
-  ]
 }
