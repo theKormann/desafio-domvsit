@@ -72,10 +72,3 @@ JSON
   "status": "APROVADA"
 }
 Nota: Se uma regra de benefício for violada ou o CPF for matematicamente inválido, a API retornará 400 Bad Request.
-
-
----
-
-Com este README, qualquer Tech Lead vai perceber imediatamente que você não apenas "fez o código funcionar", mas que pensou na arquitetura, na escalabilidade e em boas práticas de mercado.
-
-Depois de commitar este arquivo, quer partir para as 3 perguntinhas da simulação
