@@ -1,8 +1,7 @@
-package com.desafio.domvs.service;
+package com.desafio.domvs.domain.service;
 
 import com.desafio.domvs.domain.OfertaTipo;
 import com.desafio.domvs.domain.Proposta;
-import com.desafio.domvs.domain.service.RegraElegibilidade;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 

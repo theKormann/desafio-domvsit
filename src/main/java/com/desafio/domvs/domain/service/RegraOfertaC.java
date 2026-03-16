@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 @Component
-public class RegraOfertaC {
+public class RegraOfertaC implements RegraElegibilidade {
 
     @Override
     public OfertaTipo getOfertaSuportada() {

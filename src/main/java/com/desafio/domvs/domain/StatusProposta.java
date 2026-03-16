@@ -1,9 +1,9 @@
 package com.desafio.domvs.domain;
 
 public enum StatusProposta {
-    RECEBIDO,      
+    RECEBIDA,      
     EM_ANALISE,    
-    APROVADO,      
-    REJEITADO,     
-    CONCLUIDO   
+    APROVADA,      
+    REJEITADA,     
+    CONCLUIDA   
 }
