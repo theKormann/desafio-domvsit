@@ -15,7 +15,9 @@ public class Proposta {
     @Id
     private UUID id;
     
+    @Convert(converter = com.desafio.domvs.infrastructure.security.CpfEncryptor.class)
     private String cpf;
+    
     private String nome;
     private BigDecimal renda;
     private BigDecimal investimentos;
