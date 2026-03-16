@@ -5,44 +5,92 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=for-the-badge&logo=postgresql)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message_Broker-ff6600?style=for-the-badge&logo=rabbitmq)
 ![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?style=for-the-badge&logo=docker)
+![JUnit5](https://img.shields.io/badge/JUnit5-Testing-25A162?style=for-the-badge&logo=junit5)
 
-API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedor Java. O microsserviço é responsável por orquestrar o fluxo de solicitação de cartões de crédito, validando regras de negócio complexas, persistindo os dados de forma relacional e emitindo eventos assíncronos para processamento posterior.
+API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedor Java. O microsserviço é responsável por orquestrar o fluxo de solicitação de cartões de crédito, validando regras de negócio complexas, persistindo dados de forma segura e emitindo eventos assíncronos para a criação efetiva das contas.
 
-## 🎯 Diferenciais Técnicos da Arquitetura
+---
 
-* **Design Patterns:** Utilização do padrão **Strategy** (através da interface `RegraElegibilidade`) para o motor de regras das ofertas. Isso permite que novas ofertas sejam criadas sem modificar o serviço principal, respeitando o Princípio Aberto/Fechado (Open/Closed) do SOLID.
-* **Validação Robusta na Entrada:** Uso de Bean Validation (JSR 303) com DTOs, incluindo a validação matemática real de documentos com a anotação `@CPF` do Hibernate Validator.
-* **Tratamento Global de Exceções:** Implementação de `@RestControllerAdvice` para capturar exceções de negócio e de validação, padronizando os retornos da API (Fail-Fast) e evitando o vazamento de Stack Traces.
-* **Mensageria (Event-Driven):** Integração com RabbitMQ. Propostas aprovadas não bloqueiam a resposta ao cliente; um evento é publicado na fila `propostas.aprovadas.queue` para processamento assíncrono.
-* **Containerização:** Infraestrutura mapeada via `docker-compose.yml` (PostgreSQL e RabbitMQ) e aplicação conteinerizada com um `Dockerfile` otimizado (Eclipse Temurin Alpine).
+## 🏗️ Arquitetura e Fluxo de Dados
 
-## ⚙️ Regras de Negócio Implementadas
+Abaixo está o diagrama de sequência do fluxo principal da aplicação, evidenciando o isolamento de responsabilidades e a comunicação assíncrona:
 
-1. **Critérios de Elegibilidade:**
-   * **Oferta A:** Renda > R$ 1.000,00
-   * **Oferta B:** Renda > R$ 15.000,00 E Investimentos > R$ 5.000,00
-   * **Oferta C:** Renda > R$ 50.000,00 E Tempo de Conta Corrente > 2 anos
-2. **Restrições de Benefícios:**
-   * `CASHBACK` e `PONTOS` não podem ser selecionados simultaneamente.
-   * `SEGURO_VIAGEM` está disponível exclusivamente para a Oferta C.
-   * `SALA_VIP` está disponível apenas para as Ofertas B e C.
+```mermaid
+sequenceDiagram
+    actor Cliente
+    participant API as PropostaController
+    participant Service as PropostaService
+    participant Regras as Motor (Strategy)
+    participant DB as PostgreSQL
+    participant Fila as RabbitMQ (Aprovadas)
+    participant Listener as ContaCartaoListener
 
-## 🚀 Como Executar o Projeto
+    Cliente->>API: POST /api/propostas
+    API->>Service: processarNovaProposta()
+    Service->>Regras: Validar Elegibilidade
+    Regras-->>Service: Retorna Aprovada/Rejeitada
+    Service->>DB: Salvar Proposta (CPF Criptografado)
+    
+    alt Se Proposta Aprovada
+        Service->>Fila: Publicar Evento (proposta_id)
+        Fila-->>Listener: Consome Evento Assincronamente
+        Listener->>DB: Cria e salva "ContaCartao"
+    end
+    
+    Service-->>API: Retorna DTO com Status Final
+    API-->>Cliente: 201 Created (Status e Benefícios)
+🛡️ Diferenciais Técnicos e Segurança
+Design Patterns: Utilização do padrão Strategy (RegraElegibilidade) para o motor de regras das ofertas. Permite a criação de novas ofertas sem modificar o serviço principal (Princípio Open/Closed do SOLID).
 
-**Pré-requisitos:** Ter o Java 21, Maven e Docker instalados.
+Segurança e LGPD (Data Masking): O CPF do cliente, classificado como dado sensível, nunca é salvo em texto pleno (plaintext). Foi implementado um AttributeConverter (JPA) que utiliza criptografia AES para salvar o dado embaralhado no banco e descriptografá-lo apenas em tempo de execução.
 
-1. **Subir a Infraestrutura (Banco de Dados e Mensageria):**
-   Na raiz do projeto, inicie os containers via Docker Compose:
-   ```bash
-   docker compose up -d
-Rodar a Aplicação Spring Boot:
+Mensageria (Event-Driven): Integração com RabbitMQ. O serviço de propostas não bloqueia a resposta aguardando a criação da conta; um evento é publicado na fila e consumido de forma totalmente assíncrona pelo ContaCartaoListener.
+
+Tratamento Global de Exceções: Uso de @RestControllerAdvice para capturar exceções de validação (@Valid, @CPF) e regras de negócio, padronizando os erros da API (Fail-Fast) e evitando vazamento de Stack Traces.
+
+Testes Automatizados: Cobertura de testes unitários para os serviços e regras de negócio utilizando JUnit 5 e Mockito.
+
+⚙️ Regras de Negócio Implementadas
+Critérios de Elegibilidade:
+
+Oferta A: Renda > R$ 1.000,00
+
+Oferta B: Renda > R$ 15.000,00 E Investimentos > R$ 5.000,00
+
+Oferta C: Renda > R$ 50.000,00 E Tempo de Conta Corrente > 2 anos
+
+Restrições de Benefícios:
+
+CASHBACK e PONTOS são mutuamente exclusivos.
+
+SEGURO_VIAGEM exclusivo para a Oferta C.
+
+SALA_VIP exclusivo para as Ofertas B e C.
+
+🚀 Como Executar o Projeto
+Pré-requisitos: Java 21, Maven e Docker instalados.
+
+1. Subir a Infraestrutura (Banco de Dados e Mensageria):
+Na raiz do projeto, inicie os containers via Docker Compose:
+
+Bash
+docker compose up -d
+2. Rodar a Aplicação Spring Boot:
 
 Bash
 ./mvnw clean spring-boot:run
-A API estará disponível na porta 8080. O Hibernate criará as tabelas no banco de dados automaticamente.
+O Hibernate se encarregará de criar as tabelas no PostgreSQL automaticamente.
 
+3. Executar os Testes Unitários:
+
+Bash
+./mvnw test
 📖 Documentação da API
-POST /api/propostas
+Como a aplicação possui integração com o springdoc-openapi, a documentação interativa (Swagger UI) pode ser acessada através do link abaixo com a aplicação rodando:
+
+👉 Acessar Swagger UI
+
+Endpoint Principal: POST /api/propostas
 Cria e analisa uma nova proposta de cartão de crédito.
 
 Exemplo de Request (Cenário de Aprovação - Oferta C):
@@ -55,21 +103,15 @@ JSON
   "investimentos": 10000.00,
   "tempoContaCorrenteAnos": 3,
   "ofertaSelecionada": "OFERTA_C",
-  "beneficiosSelecionados": [
-    "SALA_VIP",
-    "SEGURO_VIAGEM"
-  ]
+  "beneficiosSelecionados": ["SALA_VIP", "SEGURO_VIAGEM"]
 }
-Exemplo de Response (201 Created - Sucesso):
+Exemplo de Response (201 Created):
 
 JSON
 {
   "id": "84e8ef21-e52a-4873-b776-55e3c63e4c90",
   "ofertaSelecionada": "OFERTA_C",
-  "beneficiosAtivos": [
-    "SALA_VIP",
-    "SEGURO_VIAGEM"
-  ],
+  "beneficiosAtivos": ["SALA_VIP", "SEGURO_VIAGEM"],
   "status": "APROVADA"
 }
 Exemplo de Response (400 Bad Request - Erro de Validação):
