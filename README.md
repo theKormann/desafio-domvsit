@@ -1,23 +1,22 @@
-💳 BTG Cards Service - Desafio Técnico DOMVS iT
+# 💳 BTG Cards Service - Desafio Técnico DOMVS iT
 
+![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-brightgreen?style=for-the-badge&logo=spring)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=for-the-badge&logo=postgresql)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message_Broker-ff6600?style=for-the-badge&logo=rabbitmq)
+![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?style=for-the-badge&logo=docker)
+![JUnit5](https://img.shields.io/badge/JUnit5-Testing-25A162?style=for-the-badge&logo=junit5)
 
+API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedor Java.
+O microsserviço orquestra o fluxo de solicitação de cartões de crédito, validando regras de negócio, persistindo dados de forma segura e emitindo eventos assíncronos para criação efetiva de contas.
 
+---
 
+## 🏗️ Arquitetura e Fluxo de Dados
 
+Diagrama de sequência do fluxo principal da aplicação, evidenciando o isolamento de responsabilidades e a comunicação assíncrona:
 
-
-
-
-
-
-
-API REST desenvolvida como parte de um desafio técnico para a vaga de Desenvolvedor Java.
-O microsserviço é responsável por orquestrar o fluxo de solicitação de cartões de crédito, aplicando regras de negócio, persistindo dados e emitindo eventos assíncronos para criação da conta do cartão.
-
-🏗️ Arquitetura e Fluxo de Dados
-
-Abaixo está o diagrama de sequência do fluxo principal da aplicação, demonstrando o isolamento de responsabilidades e a comunicação assíncrona entre serviços.
-
+```mermaid
 sequenceDiagram
     actor Cliente
     participant API as PropostaController
@@ -31,121 +30,85 @@ sequenceDiagram
     API->>Service: processarNovaProposta()
     Service->>Regras: Validar Elegibilidade
     Regras-->>Service: Retorna Aprovada/Rejeitada
-    Service->>DB: Salvar Proposta (CPF Criptografado)
-    
-    alt Se Proposta Aprovada
-        Service->>Fila: Publicar Evento (proposta_id)
-        Fila-->>Listener: Consome Evento Assincronamente
+    Service->>DB: Salvar Proposta (CPF criptografado)
+
+    alt Se proposta aprovada
+        Service->>Fila: Publicar evento (proposta_id)
+        Fila-->>Listener: Consome evento assincronamente
         Listener->>DB: Cria e salva ContaCartao
     end
-    
-    Service-->>API: Retorna DTO com Status Final
-    API-->>Cliente: 201 Created
-🛡️ Diferenciais Técnicos
-🧩 Design Patterns
 
-Uso do Strategy Pattern (RegraElegibilidade) para implementar o motor de regras das ofertas.
+    Service-->>API: Retorna DTO com status final
+    API-->>Cliente: 201 Created (status e benefícios)
+```
 
-Isso permite:
+## 🛡️ Diferenciais Técnicos e Segurança
 
-adicionar novas ofertas
+- **Design Patterns:** utilização do padrão Strategy (`RegraElegibilidade`) para o motor de regras das ofertas, permitindo criação de novas ofertas sem alterar o serviço principal (princípio Open/Closed do SOLID).
+- **Segurança e LGPD (Data Masking):** o CPF, dado sensível, nunca é salvo em texto puro. Foi implementado um `AttributeConverter` (JPA) com criptografia AES para persistir o dado cifrado e descriptografá-lo apenas em runtime.
+- **Mensageria (Event-Driven):** integração com RabbitMQ. O serviço de propostas não bloqueia a resposta aguardando criação da conta; um evento é publicado e consumido de forma assíncrona por `ContaCartaoListener`.
+- **Tratamento Global de Exceções:** uso de `@RestControllerAdvice` para capturar exceções de validação (`@Valid`, `@CPF`) e regras de negócio, padronizando erros da API (Fail-Fast) e evitando vazamento de stack traces.
+- **Testes Automatizados:** cobertura de testes unitários para serviços e regras de negócio usando JUnit 5 e Mockito.
 
-alterar regras sem modificar o serviço principal
+## ⚙️ Regras de Negócio Implementadas
 
-manter aderência ao Princípio Open/Closed (SOLID)
+### Critérios de Elegibilidade
 
-🔐 Segurança e LGPD
+- **Oferta A:** renda > R$ 1.000,00
+- **Oferta B:** renda > R$ 15.000,00 e investimentos > R$ 5.000,00
+- **Oferta C:** renda > R$ 50.000,00 e tempo de conta corrente > 2 anos
 
-O CPF do cliente nunca é salvo em texto puro.
+### Restrições de Benefícios
 
-Foi implementado um AttributeConverter (JPA) que:
+- `CASHBACK` e `PONTOS` são mutuamente exclusivos.
+- `SEGURO_VIAGEM` é exclusivo da Oferta C.
+- `SALA_VIP` é exclusivo das Ofertas B e C.
 
-criptografa o CPF usando AES
+## 🚀 Como Executar o Projeto
 
-salva apenas a versão criptografada no banco
+### Pré-requisitos
 
-descriptografa apenas em tempo de execução
+- Java 21
+- Maven
+- Docker
 
-Isso evita exposição de dados sensíveis.
+### 1. Subir a infraestrutura (banco de dados e mensageria)
 
-📩 Arquitetura Event-Driven
+Na raiz do projeto:
 
-Integração com RabbitMQ para comunicação assíncrona.
-
-Fluxo:
-
-Proposta aprovada
-
-Evento publicado na fila
-
-ContaCartaoListener consome o evento
-
-Conta de cartão criada
-
-Isso garante:
-
-baixo acoplamento
-
-melhor escalabilidade
-
-resposta rápida da API
-
-⚠️ Tratamento Global de Erros
-
-Uso de @RestControllerAdvice para:
-
-capturar exceções
-
-padronizar respostas de erro
-
-aplicar estratégia Fail Fast
-
-🗄️ Arquitetura de Dados
-
-Infraestrutura preparada para múltiplos bancos:
-
-PostgreSQL
-
-MongoDB
-
-Elasticsearch
-
-Todos disponíveis via Docker Compose.
-
-⚙️ Regras de Negócio Implementadas
-🎯 Critérios de Elegibilidade
-Oferta	Regras
-Oferta A	Renda > R$ 1.000
-Oferta B	Renda > R$ 15.000 e Investimentos > R$ 5.000
-Oferta C	Renda > R$ 50.000 e Tempo de conta > 2 anos
-🎁 Restrições de Benefícios
-Benefício	Restrição
-CASHBACK	Exclusivo (não pode combinar com PONTOS)
-PONTOS	Exclusivo (não pode combinar com CASHBACK)
-SEGURO_VIAGEM	Apenas Oferta C
-SALA_VIP	Apenas Ofertas B e C
-🚀 Como Executar o Projeto
-Pré-requisitos
-
-Java 21
-
-Maven
-
-Docker
-
-Subir infraestrutura
+```bash
 docker compose up -d
-Rodar aplicação
+```
+
+### 2. Rodar a aplicação Spring Boot
+
+```bash
 ./mvnw clean spring-boot:run
-Executar testes
+```
+
+O Hibernate criará as tabelas no PostgreSQL automaticamente.
+
+### 3. Executar os testes unitários
+
+```bash
 ./mvnw test
-📖 Documentação da API
+```
 
-Com a aplicação rodando, acesse:
+## 📖 Documentação da API
 
-http://localhost:8080/swagger-ui/index.html
-📌 Exemplo de Request
-POST /api/propostas
+Com a aplicação em execução, acesse a documentação interativa (Swagger UI):
+
+👉 http://localhost:8080/swagger-ui/index.html
+
+### Endpoint principal
+
+`POST /api/propostas`
+
+Cria e analisa uma nova proposta de cartão de crédito.
+
+### Exemplo de request (cenário de aprovação - Oferta C)
+
+```json
 {
   "cpf": "06236683056",
   "nome": "Matheus Kormann",
@@ -153,8 +116,30 @@ POST /api/propostas
   "investimentos": 10000.00,
   "tempoContaCorrenteAnos": 3,
   "ofertaSelecionada": "OFERTA_C",
-  "beneficiosSelecionados": [
-    "SALA_VIP",
-    "SEGURO_VIAGEM"
+  "beneficiosSelecionados": ["SALA_VIP", "SEGURO_VIAGEM"]
+}
+```
+
+### Exemplo de response (201 Created)
+
+```json
+{
+  "id": "84e8ef21-e52a-4873-b776-55e3c63e4c90",
+  "ofertaSelecionada": "OFERTA_C",
+  "beneficiosAtivos": ["SALA_VIP", "SEGURO_VIAGEM"],
+  "status": "APROVADA"
+}
+```
+
+### Exemplo de response (400 Bad Request - erro de validação)
+
+```json
+{
+  "timestamp": "2026-03-16T02:17:58.413",
+  "status": 400,
+  "erro": "Dados inválidos na requisição",
+  "detalhes": [
+    "cpf: Formato de CPF inválido."
   ]
 }
+```
