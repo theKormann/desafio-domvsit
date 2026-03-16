@@ -1,12 +1,13 @@
-package com.desafio.domvs.service
+package com.desafio.domvs.service;
 
 import com.desafio.domvs.domain.OfertaTipo;
 import com.desafio.domvs.domain.Proposta;
+import com.desafio.domvs.domain.service.RegraElegibilidade;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 @Component
-public class RegraOfertaA implements RegraElegibilidade{
+public class RegraOfertaA implements RegraElegibilidade {
     
     @Override
     public OfertaTipo getOfertaSuportada() {
