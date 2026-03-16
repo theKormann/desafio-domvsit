@@ -59,6 +59,8 @@ JSON
     "SEGURO_VIAGEM"
   ]
 }
+
+
 Exemplo de Response (201 Created):
 
 JSON
@@ -71,4 +73,6 @@ JSON
   ],
   "status": "APROVADA"
 }
+
+
 Nota: Se uma regra de benefício for violada ou o CPF for matematicamente inválido, a API retornará 400 Bad Request.
