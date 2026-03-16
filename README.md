@@ -69,15 +69,14 @@ SALA_VIP exclusivo para as Ofertas B e C.
 Pré-requisitos: Java 21, Maven e Docker instalados.
 
 Subir a Infraestrutura:
-
 Bash
 docker compose up -d
-Rodar a Aplicação:
 
+Rodar a Aplicação:
 Bash
 ./mvnw clean spring-boot:run
-Executar os Testes:
 
+Executar os Testes:
 Bash
 ./mvnw test
 
