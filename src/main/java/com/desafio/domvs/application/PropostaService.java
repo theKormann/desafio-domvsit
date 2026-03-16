@@ -4,7 +4,9 @@ import com.desafio.domvs.domain.BeneficioTipo;
 import com.desafio.domvs.domain.OfertaTipo;
 import com.desafio.domvs.domain.Proposta;
 import com.desafio.domvs.domain.StatusProposta;
+import com.desafio.domvs.domain.repository.PropostaRepository;
 import com.desafio.domvs.domain.service.RegraElegibilidade;
+import com.desafio.domvs.infrastructure.messaging.PropostaPublisher; 
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,9 +15,15 @@ import java.util.List;
 public class PropostaService {
 
     private final List<RegraElegibilidade> regrasElegibilidade;
+    private final PropostaRepository propostaRepository;
+    private final PropostaPublisher propostaPublisher; 
 
-    public PropostaService(List<RegraElegibilidade> regrasElegibilidade) {
+    public PropostaService(List<RegraElegibilidade> regrasElegibilidade, 
+                           PropostaRepository propostaRepository,
+                           PropostaPublisher propostaPublisher) {
         this.regrasElegibilidade = regrasElegibilidade;
+        this.propostaRepository = propostaRepository;
+        this.propostaPublisher = propostaPublisher;
     }
 
     public Proposta processarNovaProposta(Proposta proposta) {
@@ -28,13 +36,20 @@ public class PropostaService {
                 .findFirst()
                 .map(regra -> regra.isElegivel(proposta))
                 .orElse(false);
+                
         if (aprovado) {
             proposta.setStatus(StatusProposta.APROVADA);
         } else {
             proposta.setStatus(StatusProposta.REJEITADA);
         }
 
-        return proposta;
+        Proposta propostaSalva = propostaRepository.save(proposta);
+
+        if (aprovado) {
+            propostaPublisher.publicarPropostaAprovada(propostaSalva);
+        }
+
+        return propostaSalva;
     }
 
     private void validarBeneficios(Proposta proposta) {
@@ -54,5 +69,4 @@ public class PropostaService {
             throw new IllegalArgumentException("A sala VIP está disponível apenas para as ofertas tipo B e C.");
         }
     }
-
 }
