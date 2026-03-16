@@ -1,7 +1,7 @@
 # 💳 BTG Cards Service - Desafio Técnico DOMVS iT
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0-brightgreen?style=for-the-badge&logo=spring)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.3-brightgreen?style=for-the-badge&logo=spring)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=for-the-badge&logo=postgresql)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message_Broker-ff6600?style=for-the-badge&logo=rabbitmq)
 ![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?style=for-the-badge&logo=docker)
@@ -11,10 +11,11 @@ API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedo
 
 ---
 
-# 🏗️ Arquitetura e Fluxo de Dados
+## 🏗️ Arquitetura e Fluxo de Dados
+
 Abaixo está o diagrama de sequência do fluxo principal da aplicação, evidenciando o isolamento de responsabilidades e a comunicação assíncrona:
 
-Snippet de código
+``mermaid
 sequenceDiagram
     actor Cliente
     participant API as PropostaController
@@ -38,62 +39,52 @@ sequenceDiagram
     
     Service-->>API: Retorna DTO com Status Final
     API-->>Cliente: 201 Created (Status e Benefícios)
-# 🛡️ Diferenciais Técnicos e Segurança
+🛡️ Diferenciais Técnicos e Segurança
 Design Patterns: Utilização do padrão Strategy (RegraElegibilidade) para o motor de regras das ofertas. Permite a criação de novas ofertas sem modificar o serviço principal (Princípio Open/Closed do SOLID).
 
-Segurança e LGPD (Data Masking): O CPF do cliente, classificado como dado sensível, nunca é salvo em texto pleno (plaintext). Foi implementado um AttributeConverter (JPA) que utiliza criptografia AES para salvar o dado embaralhado no banco e descriptografá-lo apenas em tempo de execução.
+Segurança e LGPD (Data Masking): O CPF do cliente nunca é salvo em texto pleno. Foi implementado um AttributeConverter (JPA) que utiliza criptografia AES para salvar o dado embaralhado no banco e descriptografá-lo apenas em tempo de execução.
 
-Mensageria (Event-Driven): Integração com RabbitMQ. O serviço de propostas não bloqueia a resposta aguardando a criação da conta; um evento é publicado na fila e consumido de forma totalmente assíncrona pelo ContaCartaoListener.
+Mensageria (Event-Driven): Integração com RabbitMQ. O serviço de propostas não bloqueia a resposta; um evento é publicado e consumido de forma assíncrona pelo ContaCartaoListener.
 
-Tratamento Global de Exceções: Uso de @RestControllerAdvice para capturar exceções de validação (@Valid, @CPF) e regras de negócio, padronizando os erros da API (Fail-Fast) e evitando vazamento de Stack Traces.
+Tratamento Global de Exceções: Uso de @RestControllerAdvice para capturar exceções de validação e regras de negócio, padronizando os erros da API (Fail-Fast).
 
-Testes Automatizados: Cobertura de testes unitários para os serviços e regras de negócio utilizando JUnit 5 e Mockito.
+Arquitetura de Dados: Infraestrutura robusta com suporte pronto para PostgreSQL, MongoDB e Elasticsearch via Docker.
 
-# ⚙️ Regras de Negócio Implementadas
+⚙️ Regras de Negócio Implementadas
 Critérios de Elegibilidade:
+Oferta A: Renda > R$ 1.000,00.
 
-Oferta A: Renda > R$ 1.000,00
+Oferta B: Renda > R$ 15.000,00 E Investimentos > R$ 5.000,00.
 
-Oferta B: Renda > R$ 15.000,00 E Investimentos > R$ 5.000,00
-
-Oferta C: Renda > R$ 50.000,00 E Tempo de Conta Corrente > 2 anos
+Oferta C: Renda > R$ 50.000,00 E Tempo de Conta Corrente > 2 anos.
 
 Restrições de Benefícios:
-
 CASHBACK e PONTOS são mutuamente exclusivos.
 
 SEGURO_VIAGEM exclusivo para a Oferta C.
 
 SALA_VIP exclusivo para as Ofertas B e C.
 
-# 🚀 Como Executar o Projeto
+🚀 Como Executar o Projeto
 Pré-requisitos: Java 21, Maven e Docker instalados.
 
-1. Subir a Infraestrutura (Banco de Dados e Mensageria):
-Na raiz do projeto, inicie os containers via Docker Compose:
+Subir a Infraestrutura:
 
 Bash
 docker compose up -d
-2. Rodar a Aplicação Spring Boot:
+Rodar a Aplicação:
 
 Bash
 ./mvnw clean spring-boot:run
-O Hibernate se encarregará de criar as tabelas no PostgreSQL automaticamente.
-
-3. Executar os Testes Unitários:
+Executar os Testes:
 
 Bash
 ./mvnw test
-# 📖 Documentação da API
-Como a aplicação possui integração com o springdoc-openapi, a documentação interativa (Swagger UI) pode ser acessada através do link abaixo com a aplicação rodando:
+📖 Documentação da API
+A documentação interativa (Swagger UI) pode ser acessada com a aplicação rodando em:
+👉 http://localhost:8080/swagger-ui/index.html
 
-# 👉 Acessar Swagger UI
-
-Endpoint Principal: POST /api/propostas
-Cria e analisa uma nova proposta de cartão de crédito.
-
-Exemplo de Request (Cenário de Aprovação - Oferta C):
-
+Exemplo de Request (POST /api/propostas):
 JSON
 {
   "cpf": "06236683056",
