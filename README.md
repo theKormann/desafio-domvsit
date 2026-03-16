@@ -12,8 +12,9 @@ API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedo
 
 * **Design Patterns:** Utilização do padrão **Strategy** (através da interface `RegraElegibilidade`) para o motor de regras das ofertas. Isso permite que novas ofertas sejam criadas sem modificar o serviço principal, respeitando o Princípio Aberto/Fechado (Open/Closed) do SOLID.
 * **Validação Robusta na Entrada:** Uso de Bean Validation (JSR 303) com DTOs, incluindo a validação matemática real de documentos com a anotação `@CPF` do Hibernate Validator.
-* **Mensageria (Event-Driven):** Integração com RabbitMQ. Propostas aprovadas não bloqueiam a resposta ao cliente; um evento é publicado na fila `propostas.aprovadas.queue` para processamento assíncrono (ex: emissão física do cartão).
-* **Isolamento de Domínio:** Separação clara entre Entidades de Domínio (`Proposta`) e Objetos de Transferência (`RequestDTO` e `ResponseDTO`).
+* **Tratamento Global de Exceções:** Implementação de `@RestControllerAdvice` para capturar exceções de negócio e de validação, padronizando os retornos da API (Fail-Fast) e evitando o vazamento de Stack Traces.
+* **Mensageria (Event-Driven):** Integração com RabbitMQ. Propostas aprovadas não bloqueiam a resposta ao cliente; um evento é publicado na fila `propostas.aprovadas.queue` para processamento assíncrono.
+* **Containerização:** Infraestrutura mapeada via `docker-compose.yml` (PostgreSQL e RabbitMQ) e aplicação conteinerizada com um `Dockerfile` otimizado (Eclipse Temurin Alpine).
 
 ## ⚙️ Regras de Negócio Implementadas
 
@@ -28,7 +29,7 @@ API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedo
 
 ## 🚀 Como Executar o Projeto
 
-**Pré-requisitos:** Ter o Java 21, Maven e Docker (ou Docker Compose) instalados.
+**Pré-requisitos:** Ter o Java 21, Maven e Docker instalados.
 
 1. **Subir a Infraestrutura (Banco de Dados e Mensageria):**
    Na raiz do projeto, inicie os containers via Docker Compose:
@@ -37,7 +38,7 @@ API REST desenvolvida como parte do desafio técnico para a vaga de Desenvolvedo
 Rodar a Aplicação Spring Boot:
 
 Bash
-./mvnw spring-boot:run
+./mvnw clean spring-boot:run
 A API estará disponível na porta 8080. O Hibernate criará as tabelas no banco de dados automaticamente.
 
 📖 Documentação da API
@@ -59,9 +60,7 @@ JSON
     "SEGURO_VIAGEM"
   ]
 }
-
-
-Exemplo de Response (201 Created):
+Exemplo de Response (201 Created - Sucesso):
 
 JSON
 {
@@ -73,6 +72,14 @@ JSON
   ],
   "status": "APROVADA"
 }
+Exemplo de Response (400 Bad Request - Erro de Validação):
 
-
-Nota: Se uma regra de benefício for violada ou o CPF for matematicamente inválido, a API retornará 400 Bad Request.
+JSON
+{
+  "timestamp": "2026-03-16T02:17:58.413",
+  "status": 400,
+  "erro": "Dados inválidos na requisição",
+  "detalhes": [
+    "cpf: Formato de CPF inválido."
+  ]
+}
