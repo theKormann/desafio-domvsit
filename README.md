@@ -39,7 +39,7 @@ sequenceDiagram
     
     Service-->>API: Retorna DTO com Status Final
     API-->>Cliente: 201 Created (Status e Benefícios)
-🛡️ Diferenciais Técnicos e Segurança
+ # 🛡️ Diferenciais Técnicos e Segurança
 Design Patterns: Utilização do padrão Strategy (RegraElegibilidade) para o motor de regras das ofertas. Permite a criação de novas ofertas sem modificar o serviço principal (Princípio Open/Closed do SOLID).
 
 Segurança e LGPD (Data Masking): O CPF do cliente nunca é salvo em texto pleno. Foi implementado um AttributeConverter (JPA) que utiliza criptografia AES para salvar o dado embaralhado no banco e descriptografá-lo apenas em tempo de execução.
@@ -50,7 +50,7 @@ Tratamento Global de Exceções: Uso de @RestControllerAdvice para capturar exce
 
 Arquitetura de Dados: Infraestrutura robusta com suporte pronto para PostgreSQL, MongoDB e Elasticsearch via Docker.
 
-⚙️ Regras de Negócio Implementadas
+# ⚙️ Regras de Negócio Implementadas
 Critérios de Elegibilidade:
 Oferta A: Renda > R$ 1.000,00.
 
@@ -65,7 +65,7 @@ SEGURO_VIAGEM exclusivo para a Oferta C.
 
 SALA_VIP exclusivo para as Ofertas B e C.
 
-🚀 Como Executar o Projeto
+# 🚀 Como Executar o Projeto
 Pré-requisitos: Java 21, Maven e Docker instalados.
 
 Subir a Infraestrutura:
@@ -80,7 +80,8 @@ Executar os Testes:
 
 Bash
 ./mvnw test
-📖 Documentação da API
+
+# 📖 Documentação da API
 A documentação interativa (Swagger UI) pode ser acessada com a aplicação rodando em:
 👉 http://localhost:8080/swagger-ui/index.html
 
